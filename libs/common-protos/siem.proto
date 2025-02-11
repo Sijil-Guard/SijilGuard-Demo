@@ -1,0 +1,88 @@
+syntax = "proto3";
+package siem;
+
+option go_package = "Go/protos";
+// Timestamp for consistent time formatting
+import "google/protobuf/timestamp.proto";
+
+// LogEntry represents a single log event
+message LogEntry {
+  string source_ip = 1;          // Source IP address
+  string destination_ip = 2;     // Destination IP address (optional)
+  string event_type = 3;         // Event type (e.g., "ssh_failed", "http_200")
+  int32 status_code = 4;         // HTTP/SSH status code
+  string user_agent = 5;         // User agent (for HTTP logs)
+  string protocol = 6;           // Protocol (e.g., "HTTP", "SSH")
+  google.protobuf.Timestamp timestamp = 7; // Event timestamp
+  map<string, string> metadata = 8; // Additional key-value pairs
+}
+
+// DeviceHealth represents health metrics for a device
+message DeviceHealth {
+  string ip = 1;                 // Device IP address
+  double cpu_usage = 2;          // CPU usage (0.0 to 1.0)
+  double memory_usage = 3;       // Memory usage (0.0 to 1.0)
+  double disk_usage = 4;         // Disk usage (0.0 to 1.0)
+  google.protobuf.Timestamp last_updated = 5; // Last update timestamp
+}
+
+// Alert represents a security alert
+message Alert {
+  string id = 1;                 // Unique alert ID
+  string source_ip = 2;          // Source IP address
+  string message = 3;            // Alert message
+  string severity = 4;           // Severity level (e.g., "low", "medium", "high")
+  google.protobuf.Timestamp timestamp = 5; // Alert timestamp
+}
+
+// AgentStatus represents the status of an agent
+message AgentStatus {
+  string agent_id = 1;           // Unique agent ID
+  string ip = 2;                 // Agent IP address
+  string version = 3;            // Agent version
+  google.protobuf.Timestamp last_ping = 4; // Last ping timestamp
+}
+
+// LogService handles log ingestion
+service LogService {
+  rpc SendLog(LogEntry) returns (LogResponse); // Send a single log
+  rpc SendLogStream(stream LogEntry) returns (LogResponse); // Stream logs
+}
+
+// HealthService handles device health reporting
+service HealthService {
+  rpc ReportHealth(DeviceHealth) returns (HealthResponse); // Report device health
+}
+
+// AlertService handles alert notifications
+service AlertService {
+  rpc SendAlert(Alert) returns (AlertResponse); // Send a single alert
+  rpc SendAlertStream(stream Alert) returns (AlertResponse); // Stream alerts
+}
+
+// AgentService handles agent communication
+service AgentService {
+  rpc RegisterAgent(AgentStatus) returns (AgentResponse); // Register agent
+  rpc UpdateStatus(AgentStatus) returns (AgentResponse); // Update agent status
+}
+
+// Response messages
+message LogResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message HealthResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message AlertResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message AgentResponse {
+  bool success = 1;
+  string message = 2;
+}
